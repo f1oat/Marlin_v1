@@ -152,6 +152,7 @@ volatile uint8_t slow_buttons;//Contains the bits of the currently pressed butto
 #endif
 uint8_t currentMenuViewOffset;              /* scroll offset in the current menu */
 uint32_t blocking_enc;
+uint32_t anti_glitch_enc = 0;               // Used too avoid glitch on ENC click due to high current in heated bed
 uint8_t lastEncoderBits;
 uint32_t encoderPosition;
 #if (SDCARDDETECT > 0)
@@ -552,6 +553,53 @@ void lcd_cooldown()
     lcd_return_to_status();
 }
 
+void lcd_auto_home()
+{
+  enquecommand_P(PSTR("G28"));
+  enquecommand_P(PSTR("G0 Z40"));
+}
+
+void b_move(int x, int y)
+{
+    static char gcode[20];
+    sprintf_P(gcode, PSTR("G0 X%d Y%d F60000"), x, y);
+    enquecommand_P(PSTR("G0 Z10"));
+    enquecommand(gcode);
+    enquecommand_P(PSTR("G0 Z0"));
+}
+
+void lcd_manual_bed_leveling()
+{
+    static int corner = 0;
+    static int init = 1;
+    // Configuration for Ultimaker Original
+    static int x[4] = { 0, 0, 200, 200 };
+    static int y[4] = { 0, 195, 170, 20 };
+    
+    if (encoderPosition != 0 || init)
+    {
+        refresh_cmd_timeout();
+        corner += (int)encoderPosition;
+        corner = corner & 3;
+        encoderPosition = 0;
+        b_move(x[corner], y[corner]);  
+        lcdDrawUpdate = 1;
+        init = 0;
+    }
+    if (lcdDrawUpdate)
+    {
+        lcd_implementation_drawedit(PSTR(MSG_CORNER), itostr2(corner));
+    }
+    if (LCD_CLICKED)
+    {
+        lcd_quick_feedback();
+        currentMenu = lcd_prepare_menu;
+        encoderPosition = 0;
+        corner = 0;
+        init = 1;
+    }
+}
+
 static void lcd_prepare_menu()
 {
     START_MENU();
@@ -562,7 +610,8 @@ static void lcd_prepare_menu()
     #endif
 #endif
     MENU_ITEM(gcode, MSG_DISABLE_STEPPERS, PSTR("M84"));
-    MENU_ITEM(gcode, MSG_AUTO_HOME, PSTR("G28"));
+    //MENU_ITEM(gcode, MSG_AUTO_HOME, PSTR("G28"));
+    MENU_ITEM(function, MSG_AUTO_HOME, lcd_auto_home);
     //MENU_ITEM(gcode, MSG_SET_ORIGIN, PSTR("G92 X0 Y0 Z0"));
 #if TEMP_SENSOR_0 != 0
   #if TEMP_SENSOR_1 != 0 || TEMP_SENSOR_2 != 0 || TEMP_SENSOR_BED != 0
@@ -583,6 +632,7 @@ static void lcd_prepare_menu()
     }
 #endif
     MENU_ITEM(submenu, MSG_MOVE_AXIS, lcd_move_menu);
+    MENU_ITEM(submenu, MSG_MANUAL_BED_LEVELING, lcd_manual_bed_leveling);
     END_MENU();
 }
 
@@ -1093,6 +1143,13 @@ static void menu_action_gcode(const char* pgcode)
 {
     enquecommand_P(pgcode);
 }
+
+// Enque a GCODE command present in RAM
+static void menu_action_gcode_ram(const char* gcode)
+{
+    enquecommand(gcode);
+}
+
 static void menu_action_function(menuFunc_t data)
 {
     (*data)();
@@ -1262,7 +1319,7 @@ void lcd_update()
 #endif
 
 #ifdef ULTIPANEL
-        if(timeoutToStatus < millis() && currentMenu != lcd_status_screen)
+        if(timeoutToStatus < millis() && currentMenu != lcd_status_screen && currentMenu != lcd_manual_bed_leveling)
         {
             lcd_return_to_status();
             lcdDrawUpdate = 2;
@@ -1320,8 +1377,15 @@ void lcd_buttons_update()
     if(READ(BTN_EN1)==0)  newbutton|=EN_A;
     if(READ(BTN_EN2)==0)  newbutton|=EN_B;
   #if BTN_ENC > 0
-    if((blocking_enc<millis()) && (READ(BTN_ENC)==0))
-        newbutton |= EN_C;
+    if((blocking_enc<millis()) && (READ(BTN_ENC)==0)) {
+        if (!anti_glitch_enc) anti_glitch_enc = millis();
+        else if (millis() - anti_glitch_enc > 50) {
+          newbutton |= EN_C;
+        }
+    }
+    else {
+      anti_glitch_enc = 0;
+    }
   #endif
     buttons = newbutton;
     #ifdef LCD_HAS_SLOW_BUTTONS

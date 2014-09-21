@@ -45,6 +45,7 @@ public:
   FORCE_INLINE int16_t get() {  sdpos = file.curPosition();return (int16_t)file.read();};
   FORCE_INLINE void setIndex(long index) {sdpos = index;file.seekSet(index);};
   FORCE_INLINE uint8_t percentDone(){if(!isFileOpen()) return 0; if(filesize) return sdpos/((filesize+99)/100); else return 0;};
+  FORCE_INLINE uint16_t per10000Done(){if(!isFileOpen()) return 0; if(filesize) return sdpos/((filesize+9999)/10000); else return 0;};
   FORCE_INLINE char* getWorkDirName(){workDir.getFilename(filename);return filename;};
 
 public:

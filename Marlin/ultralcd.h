@@ -2,6 +2,7 @@
 #define ULTRALCD_H
 
 #include "Marlin.h"
+#include "MarlinSerial.h"
 
 #ifdef ULTRA_LCD
 
