@@ -195,6 +195,7 @@ static void lcd_status_screen()
         currentMenu = lcd_main_menu;
         encoderPosition = 0;
         lcd_quick_feedback();
+        lcd_implementation_init(); // to maybe revive the LCD if static electricity killed it.
     }
 
 #ifdef ULTIPANEL_FEEDMULTIPLY
@@ -256,6 +257,8 @@ static void lcd_sdcard_stop()
         enquecommand_P(PSTR(SD_FINISHED_RELEASECOMMAND));
     }
     autotempShutdown();
+
+	cancel_heatup = true;
 }
 
 /* Menu implementation */
@@ -917,6 +920,10 @@ static void lcd_control_motion_menu()
 #ifdef ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED
     MENU_ITEM_EDIT(bool, MSG_ENDSTOP_ABORT, &abort_on_endstop_hit);
 #endif
+#ifdef SCARA
+    MENU_ITEM_EDIT(float74, MSG_XSCALE, &axis_scaling[X_AXIS],0.5,2);
+    MENU_ITEM_EDIT(float74, MSG_YSCALE, &axis_scaling[Y_AXIS],0.5,2);
+#endif
     END_MENU();
 }
 
@@ -952,9 +959,15 @@ static void lcd_control_retract_menu()
     MENU_ITEM(back, MSG_CONTROL, lcd_control_menu);
     MENU_ITEM_EDIT(bool, MSG_AUTORETRACT, &autoretract_enabled);
     MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT, &retract_length, 0, 100);
+	#if EXTRUDERS > 1
+      MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT_SWAP, &retract_length_swap, 0, 100);
+    #endif
     MENU_ITEM_EDIT(float3, MSG_CONTROL_RETRACTF, &retract_feedrate, 1, 999);
     MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT_ZLIFT, &retract_zlift, 0, 999);
     MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT_RECOVER, &retract_recover_length, 0, 100);
+	#if EXTRUDERS > 1
+      MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT_RECOVER_SWAP, &retract_recover_length_swap, 0, 100);
+    #endif
     MENU_ITEM_EDIT(float3, MSG_CONTROL_RETRACT_RECOVERF, &retract_recover_feedrate, 1, 999);
     END_MENU();
 }
@@ -1552,9 +1565,13 @@ char *itostr31(const int &xx)
   return conv;
 }
 
-char *itostr3(const int &xx)
+char *itostr3(const int &x)
 {
-  if (xx >= 100)
+  int xx = x;
+  if (xx < 0) {
+     conv[0]='-';
+     xx = -xx;
+  } else if (xx >= 100)
     conv[0]=(xx/100)%10+'0';
   else
     conv[0]=' ';
