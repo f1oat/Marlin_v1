@@ -179,7 +179,9 @@
 	#define MSG_BABYSTEP_Y "Babystep Y"
 	#define MSG_BABYSTEP_Z "Babystep Z"
 	#define MSG_ENDSTOP_ABORT "Endstop abort"
-
+        #define MSG_MANUAL_BED_LEVELING "Manual bed level"
+        #define MSG_CORNER "Corner:"       
+        
 // Serial Console Messages
 
 	#define MSG_Enqueing "enqueing \""

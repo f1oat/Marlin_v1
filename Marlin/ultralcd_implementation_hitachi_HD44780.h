@@ -502,6 +502,17 @@ static void lcd_implementation_status_screen()
     //Status message line on the last line
     lcd.setCursor(0, LCD_HEIGHT - 1);
     lcd.print(lcd_status_message);
+    
+    // Display ETA time
+    if (IS_SD_PRINTING && (starttime != 0) && card.percentDone() > 0)
+    {
+        lcd.setCursor(LCD_WIDTH - 5, LCD_HEIGHT - 1);
+        // Compute ETA time
+        uint16_t eta = ((10000 - card.per10000Done()) * (millis()/60000 - starttime/60000)) / card.per10000Done();
+        lcd.print(itostr2(eta/60));
+        lcd.print(':');
+        lcd.print(itostr2(eta%60));
+    }
 }
 static void lcd_implementation_drawmenu_generic(uint8_t row, const char* pstr, char pre_char, char post_char)
 {

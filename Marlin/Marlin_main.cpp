@@ -249,12 +249,10 @@ int EtoPPressure=0;
   float retract_recover_feedrate = RETRACT_RECOVER_FEEDRATE;
 #endif
 
-#ifdef ULTIPANEL
-  #ifdef PS_DEFAULT_OFF
-    bool powersupply = false;
-  #else
-	  bool powersupply = true;
-  #endif
+#ifdef PS_DEFAULT_OFF
+  bool powersupply = false;
+#else
+  bool powersupply = true;
 #endif
 
 #ifdef DELTA
@@ -304,7 +302,7 @@ const int sensitive_pins[] = SENSITIVE_PINS; // Sensitive pin list for M42
 
 //Inactivity shutdown variables
 static unsigned long previous_millis_cmd = 0;
-static unsigned long max_inactive_time = 0;
+static unsigned long max_inactive_time = 600*1000l;  //10 minutes by default
 static unsigned long stepper_inactive_time = DEFAULT_STEPPER_DEACTIVE_TIME*1000l;
 
 unsigned long starttime=0;
@@ -528,6 +526,44 @@ void setup()
   #endif
 }
 
+void switch_power_on()
+{
+  if (powersupply) return;
+#if defined(PS_ON_PIN) && PS_ON_PIN > -1
+  SET_OUTPUT(PS_ON_PIN); //GND
+  WRITE(PS_ON_PIN, PS_ON_AWAKE);
+#endif
+  powersupply = true;
+#ifdef ULTIPANEL
+  LCD_MESSAGEPGM(WELCOME_MSG);
+  lcd_update();
+#endif
+}
+
+void switch_power_off()
+{
+  if (!powersupply) return;
+  disable_heater();
+  st_synchronize();
+  disable_e0();
+  disable_e1();
+  disable_e2();
+  finishAndDisableSteppers();
+  fanSpeed = 0;
+  delay(1000); // Wait a little before to switch off
+#if defined(SUICIDE_PIN) && SUICIDE_PIN > -1
+  st_synchronize();
+  suicide();
+#elif defined(PS_ON_PIN) && PS_ON_PIN > -1
+  SET_OUTPUT(PS_ON_PIN);
+  WRITE(PS_ON_PIN, PS_ON_ASLEEP);
+#endif
+  powersupply = false;
+#ifdef ULTIPANEL
+  LCD_MESSAGEPGM(MACHINE_NAME" "MSG_OFF".");
+  lcd_update();
+#endif
+}
 
 void loop()
 {
@@ -1154,6 +1190,7 @@ void process_commands()
 #endif
   if(code_seen('G'))
   {
+    switch_power_on();
     switch((int)code_value())
     {
     case 0: // G0 -> G1
@@ -1812,6 +1849,7 @@ void process_commands()
       }
      break;
     case 104: // M104
+      if (code_value() != 0) switch_power_on();
       if(setTargetedHotend(104)){
         break;
       }
@@ -1823,6 +1861,7 @@ void process_commands()
       setWatch();
       break;
     case 140: // M140 set bed temp
+      if (code_value() != 0) switch_power_on();
       if (code_seen('S')) setTargetBed(code_value());
       break;
     case 105 : // M105
@@ -2064,48 +2103,13 @@ void process_commands()
 
     #if defined(PS_ON_PIN) && PS_ON_PIN > -1
       case 80: // M80 - Turn on Power Supply
-        SET_OUTPUT(PS_ON_PIN); //GND
-        WRITE(PS_ON_PIN, PS_ON_AWAKE);
-
-        // If you have a switch on suicide pin, this is useful
-        // if you want to start another print with suicide feature after
-        // a print without suicide...
-        #if defined SUICIDE_PIN && SUICIDE_PIN > -1
-            SET_OUTPUT(SUICIDE_PIN);
-            WRITE(SUICIDE_PIN, HIGH);
-        #endif
-
-        #ifdef ULTIPANEL
-          powersupply = true;
-          LCD_MESSAGEPGM(WELCOME_MSG);
-          lcd_update();
-        #endif
+        switch_power_on();
         break;
-      #endif
-
       case 81: // M81 - Turn off Power Supply
-        disable_heater();
-        st_synchronize();
-        disable_e0();
-        disable_e1();
-        disable_e2();
-        finishAndDisableSteppers();
-        fanSpeed = 0;
-        delay(1000); // Wait a little before to switch off
-      #if defined(SUICIDE_PIN) && SUICIDE_PIN > -1
-        st_synchronize();
-        suicide();
-      #elif defined(PS_ON_PIN) && PS_ON_PIN > -1
-        SET_OUTPUT(PS_ON_PIN);
-        WRITE(PS_ON_PIN, PS_ON_ASLEEP);
-      #endif
-      #ifdef ULTIPANEL
-        powersupply = false;
-        LCD_MESSAGEPGM(MACHINE_NAME" "MSG_OFF".");
-        lcd_update();
-      #endif
-	  break;
-
+        switch_power_off();
+	break;
+    #endif
+    
     case 82:
       axis_relative_modes[3] = false;
       break;
@@ -3374,7 +3378,7 @@ void manage_inactivity()
 {
   if( (millis() - previous_millis_cmd) >  max_inactive_time )
     if(max_inactive_time)
-      kill();
+      switch_power_off();
   if(stepper_inactive_time)  {
     if( (millis() - previous_millis_cmd) >  stepper_inactive_time )
     {
