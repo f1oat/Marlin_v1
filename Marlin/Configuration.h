@@ -372,7 +372,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 // Travel limits after homing
 #define X_MAX_POS 205
 #define X_MIN_POS 0
-#define Y_MAX_POS 205
+#define Y_MAX_POS 185
 #define Y_MIN_POS 0
 #define Z_MAX_POS 195	// Was 200, but reduced on F1OAT's Ultimaker
 #define Z_MIN_POS 0
@@ -414,7 +414,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 
      // set the number of grid points per dimension
      // I wouldn't see a reason to go above 3 (=9 probing points on the bed)
-    #define AUTO_BED_LEVELING_GRID_POINTS 2
+    #define AUTO_BED_LEVELING_GRID_POINTS 3
 
 
   #else  // not AUTO_BED_LEVELING_GRID
@@ -455,7 +455,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 
   //Define positions for the deployment of a retracting probe such as http://www.thingiverse.com/thing:89146
   #define Z_PROBE_DEPLOY_SEQUENCE  { {107, 180, 29}, {107, 193, 29}, {91, 193, 15}, {91, 180, 15}, {-1, -1, -1} }
-  #define Z_PROBE_RETRACT_SEQUENCE { { 57, 180, 53}, { 57, 193, 53}, {52, 193, 28}, {52, 180, 28}, { -1, -1, -1} }
+  #define Z_PROBE_RETRACT_SEQUENCE { { 57, 180, 53}, { 57, 193, 53}, {52, 193, 29}, {52, 180, 29}, { -1, -1, -1} }
 
 
 //If you have enabled the Bed Auto Leveling and are using the same Z Probe for Z Homing,
