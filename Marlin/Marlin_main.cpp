@@ -2509,10 +2509,31 @@ Sigma_Exit:
       #endif //TEMP_RESIDENCY_TIME
           if( (millis() - codenum) > 1000UL )
           { //Print Temp Reading and remaining time every 1 second while heating up/cooling down
+		#if 0
             SERIAL_PROTOCOLPGM("T:");
             SERIAL_PROTOCOL_F(degHotend(tmp_extruder),1);
             SERIAL_PROTOCOLPGM(" E:");
             SERIAL_PROTOCOL((int)tmp_extruder);
+		#else
+		    SERIAL_PROTOCOLPGM("T:");
+		    SERIAL_PROTOCOL_F(degHotend(tmp_extruder),1);
+		    SERIAL_PROTOCOLPGM(" /");
+		    SERIAL_PROTOCOL_F(degTargetHotend(tmp_extruder),1);
+		    #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
+		    SERIAL_PROTOCOLPGM(" B:");
+		    SERIAL_PROTOCOL_F(degBed(),1);
+		    SERIAL_PROTOCOLPGM(" /");
+		    SERIAL_PROTOCOL_F(degTargetBed(),1);
+		    #endif //TEMP_BED_PIN
+		    for (int8_t cur_extruder = 0; cur_extruder < EXTRUDERS; ++cur_extruder) {
+			    SERIAL_PROTOCOLPGM(" T");
+			    SERIAL_PROTOCOL(cur_extruder);
+			    SERIAL_PROTOCOLPGM(":");
+			    SERIAL_PROTOCOL_F(degHotend(cur_extruder),1);
+			    SERIAL_PROTOCOLPGM(" /");
+			    SERIAL_PROTOCOL_F(degTargetHotend(cur_extruder),1);
+		    }
+		#endif
             #ifdef TEMP_RESIDENCY_TIME
               SERIAL_PROTOCOLPGM(" W:");
               if(residencyStart > -1)
