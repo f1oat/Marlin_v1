@@ -4,3 +4,7 @@ applet/
 *.orig
 *.rej
 *.bak
+*.d
+Release/
+Debug/
+.*.h

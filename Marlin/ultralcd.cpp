@@ -556,12 +556,6 @@ void lcd_cooldown()
     lcd_return_to_status();
 }
 
-void lcd_auto_home()
-{
-  enquecommand_P(PSTR("G28"));
-  enquecommand_P(PSTR("G0 Z40"));
-}
-
 void b_move(int x, int y)
 {
     static char gcode[20];
@@ -577,7 +571,7 @@ void lcd_manual_bed_leveling()
     static int init = 1;
     // Configuration for Ultimaker Original
     static int x[4] = { 0, 0, 200, 200 };
-    static int y[4] = { 0, 195, 170, 20 };
+    static int y[4] = { 0, 170, 170, 20 };
     
     if (encoderPosition != 0 || init)
     {
@@ -613,9 +607,11 @@ static void lcd_prepare_menu()
     #endif
 #endif
     MENU_ITEM(gcode, MSG_DISABLE_STEPPERS, PSTR("M84"));
-    //MENU_ITEM(gcode, MSG_AUTO_HOME, PSTR("G28"));
-    MENU_ITEM(function, MSG_AUTO_HOME, lcd_auto_home);
+    MENU_ITEM(gcode, MSG_AUTO_HOME, PSTR("G28"));
     //MENU_ITEM(gcode, MSG_SET_ORIGIN, PSTR("G92 X0 Y0 Z0"));
+#ifdef ENABLE_AUTO_BED_LEVELING	
+	MENU_ITEM(gcode, MSG_AUTO_BED_LEVELING, PSTR("G29"));
+#endif
 #if TEMP_SENSOR_0 != 0
   #if TEMP_SENSOR_1 != 0 || TEMP_SENSOR_2 != 0 || TEMP_SENSOR_BED != 0
     MENU_ITEM(submenu, MSG_PREHEAT_PLA, lcd_preheat_pla_menu);

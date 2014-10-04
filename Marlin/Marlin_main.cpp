@@ -230,6 +230,11 @@ float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
 bool axis_known_position[3] = {false, false, false};
 float zprobe_zoffset;
 
+#ifdef Z_PROBE_DEPLOY_SEQUENCE
+float z_probe_deploy_sequence[][3] = Z_PROBE_DEPLOY_SEQUENCE;
+float z_probe_retract_sequence[][3] = Z_PROBE_RETRACT_SEQUENCE;
+#endif
+
 // Extruder offset
 #if EXTRUDERS > 1
 #ifndef DUAL_X_CARRIAGE
@@ -1119,6 +1124,14 @@ static void engage_z_probe() {
 #endif
     }
     #endif
+	
+	#ifdef Z_PROBE_DEPLOY_SEQUENCE
+	for (int i=0; z_probe_deploy_sequence[i][0] != -1; i++) {
+		do_blocking_move_to(z_probe_deploy_sequence[i][0],
+					        z_probe_deploy_sequence[i][1],
+							z_probe_deploy_sequence[i][2]);	
+	}
+	#endif
 }
 
 static void retract_z_probe() {
@@ -1135,6 +1148,14 @@ static void retract_z_probe() {
 #endif
     }
     #endif
+	
+	#ifdef Z_PROBE_DEPLOY_SEQUENCE
+	for (int i=0; z_probe_retract_sequence[i][0] != -1; i++) {
+		do_blocking_move_to(z_probe_retract_sequence[i][0],
+						    z_probe_retract_sequence[i][1],
+							z_probe_retract_sequence[i][2]);
+	}
+	#endif
 }
 
 /// Probe bed height at position (x,y), returns the measured z value
@@ -1143,12 +1164,12 @@ static float probe_pt(float x, float y, float z_before) {
   do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], z_before);
   do_blocking_move_to(x - X_PROBE_OFFSET_FROM_EXTRUDER, y - Y_PROBE_OFFSET_FROM_EXTRUDER, current_position[Z_AXIS]);
 
-#ifndef Z_PROBE_SLED
+#if not defined(Z_PROBE_SLED) && not defined(Z_PROBE_DEPLOY_SEQUENCE)
   engage_z_probe();   // Engage Z Servo endstop if available
 #endif // Z_PROBE_SLED
   run_z_probe();
   float measured_z = current_position[Z_AXIS];
-#ifndef Z_PROBE_SLED
+#if not defined(Z_PROBE_SLED) && not defined(Z_PROBE_DEPLOY_SEQUENCE)
   retract_z_probe();
 #endif // Z_PROBE_SLED
 
@@ -1673,13 +1694,16 @@ void process_commands()
 #ifdef Z_PROBE_SLED
             dock_sled(false);
 #endif // Z_PROBE_SLED
+#ifdef Z_PROBE_DEPLOY_SEQUENCE
+			engage_z_probe();
+#endif
             st_synchronize();
             // make sure the bed_level_rotation_matrix is identity or the planner will get it incorectly
-            //vector_3 corrected_position = plan_get_position_mm();
-            //corrected_position.debug("position before G29");
+            vector_3 corrected_position = plan_get_position();
+            corrected_position.debug("position before G29");
             plan_bed_level_matrix.set_to_identity();
             vector_3 uncorrected_position = plan_get_position();
-            //uncorrected_position.debug("position durring G29");
+            uncorrected_position.debug("position during G29");
             current_position[X_AXIS] = uncorrected_position.x;
             current_position[Y_AXIS] = uncorrected_position.y;
             current_position[Z_AXIS] = uncorrected_position.z;
@@ -1739,7 +1763,12 @@ void process_commands()
                   z_before = current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS;
                 }
 
-                float measured_z = probe_pt(xProbe, yProbe, z_before);
+//				SERIAL_PROTOCOLPGM(" probe x: ");
+//				SERIAL_PROTOCOL(xProbe);
+//				SERIAL_PROTOCOLPGM(" y: ");
+//				SERIAL_PROTOCOLLN(yProbe);
+		   
+		        float measured_z = probe_pt(xProbe, yProbe, z_before);
 
                 eqnBVector[probePointCounter] = measured_z;
 
@@ -1752,6 +1781,13 @@ void process_commands()
             }
             clean_up_after_endstop_move();
 
+#ifdef Z_PROBE_DEPLOY_SEQUENCE
+			x_tmp = current_position[X_AXIS];
+			y_tmp = current_position[Y_AXIS];
+			z_tmp = current_position[Z_AXIS];
+			retract_z_probe();
+			do_blocking_move_to(x_tmp, y_tmp, z_tmp);
+#endif
             // solve lsq problem
             double *plane_equation_coefficients = qr_solve(AUTO_BED_LEVELING_GRID_POINTS*AUTO_BED_LEVELING_GRID_POINTS, 3, eqnAMatrix, eqnBVector);
 
@@ -1761,7 +1797,6 @@ void process_commands()
             SERIAL_PROTOCOL(plane_equation_coefficients[1]);
             SERIAL_PROTOCOLPGM(" d: ");
             SERIAL_PROTOCOLLN(plane_equation_coefficients[2]);
-
 
             set_bed_level_equation_lsq(plane_equation_coefficients);
 
@@ -3329,7 +3364,7 @@ Sigma_Exit:
       st_synchronize();
     }
     break;
-#if defined(ENABLE_AUTO_BED_LEVELING) && defined(SERVO_ENDSTOPS) && not defined(Z_PROBE_SLED)
+#if defined(ENABLE_AUTO_BED_LEVELING) && (defined(SERVO_ENDSTOPS) || defined(Z_PROBE_DEPLOY_SEQUENCE)) && not defined(Z_PROBE_SLED)
     case 401:
     {
         engage_z_probe();    // Engage Z Servo endstop if available
