@@ -1814,6 +1814,13 @@ void process_commands()
             // probe 3
             float z_at_pt_3 = probe_pt(ABL_PROBE_PT_3_X, ABL_PROBE_PT_3_Y, current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
 
+#ifdef Z_PROBE_DEPLOY_SEQUENCE
+			x_tmp = current_position[X_AXIS];
+			y_tmp = current_position[Y_AXIS];
+			z_tmp = current_position[Z_AXIS];
+			retract_z_probe();
+			do_blocking_move_to(x_tmp, y_tmp, z_tmp);
+#endif
             clean_up_after_endstop_move();
 
             set_bed_level_equation_3pts(z_at_pt_1, z_at_pt_2, z_at_pt_3);

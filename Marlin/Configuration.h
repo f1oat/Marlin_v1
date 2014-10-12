@@ -399,7 +399,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 //    Probe 3 arbitrary points on the bed (that aren't colinear)
 //    You must specify the X & Y coordinates of all 3 points
 
-  #define AUTO_BED_LEVELING_GRID
+  //#define AUTO_BED_LEVELING_GRID
   // with AUTO_BED_LEVELING_GRID, the bed is sampled in a
   // AUTO_BED_LEVELING_GRID_POINTSxAUTO_BED_LEVELING_GRID_POINTS grid
   // and least squares solution is calculated
@@ -414,19 +414,19 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 
      // set the number of grid points per dimension
      // I wouldn't see a reason to go above 3 (=9 probing points on the bed)
-    #define AUTO_BED_LEVELING_GRID_POINTS 3
+    #define AUTO_BED_LEVELING_GRID_POINTS 2
 
 
   #else  // not AUTO_BED_LEVELING_GRID
     // with no grid, just probe 3 arbitrary points.  A simple cross-product
     // is used to esimate the plane of the print bed
 
-      #define ABL_PROBE_PT_1_X 15
-      #define ABL_PROBE_PT_1_Y 180
-      #define ABL_PROBE_PT_2_X 15
-      #define ABL_PROBE_PT_2_Y 20
-      #define ABL_PROBE_PT_3_X 170
-      #define ABL_PROBE_PT_3_Y 20
+      #define ABL_PROBE_PT_1_X 20
+      #define ABL_PROBE_PT_1_Y 200
+      #define ABL_PROBE_PT_2_X 180
+      #define ABL_PROBE_PT_2_Y 200
+      #define ABL_PROBE_PT_3_X 20
+      #define ABL_PROBE_PT_3_Y 60
 
   #endif // AUTO_BED_LEVELING_GRID
 
@@ -455,7 +455,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 
   //Define positions for the deployment of a retracting probe such as http://www.thingiverse.com/thing:89146
   #define Z_PROBE_DEPLOY_SEQUENCE  { {107, 180, 29}, {107, 193, 29}, {91, 193, 15}, {91, 180, 15}, {-1, -1, -1} }
-  #define Z_PROBE_RETRACT_SEQUENCE { { 57, 180, 53}, { 57, 193, 53}, {52, 193, 29}, {52, 180, 29}, { -1, -1, -1} }
+  #define Z_PROBE_RETRACT_SEQUENCE { { 57, 180, 58}, { 57, 193, 58}, {52, 193, 29}, {52, 180, 29}, { -1, -1, -1} }
 
 
 //If you have enabled the Bed Auto Leveling and are using the same Z Probe for Z Homing,
