@@ -230,9 +230,10 @@ float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
 bool axis_known_position[3] = {false, false, false};
 float zprobe_zoffset;
 
-#ifdef Z_PROBE_DEPLOY_SEQUENCE
-float z_probe_deploy_sequence[][3] = Z_PROBE_DEPLOY_SEQUENCE;
-float z_probe_retract_sequence[][3] = Z_PROBE_RETRACT_SEQUENCE;
+#ifdef Z_PROBE_DESTROYER2012
+float z_probe_deploy_sequence[][3] = Z_PROBE_DESTROYER2012_DEPLOY_SEQUENCE;
+float z_probe_retract_sequence[][3] = Z_PROBE_DESTROYER2012_RETRACT_SEQUENCE;
+float z_probe_destroyer2012_offset = 0;
 #endif
 
 // Extruder offset
@@ -1024,7 +1025,7 @@ static void set_bed_level_equation_3pts(float z_at_pt_1, float z_at_pt_2, float 
     vector_3 pt3 = vector_3(ABL_PROBE_PT_3_X, ABL_PROBE_PT_3_Y, z_at_pt_3);
 
     vector_3 from_2_to_1 = (pt1 - pt2).get_normal();
-    vector_3 from_2_to_3 = (pt3 - pt2).get_normal();
+    vector_3 from_2_to_3 = (pt2 - pt3).get_normal();
     vector_3 planeNormal = vector_3::cross(from_2_to_1, from_2_to_3).get_normal();
     planeNormal = vector_3(planeNormal.x, planeNormal.y, abs(planeNormal.z));
 
@@ -1045,7 +1046,7 @@ static void set_bed_level_equation_3pts(float z_at_pt_1, float z_at_pt_2, float 
 #endif // AUTO_BED_LEVELING_GRID
 
 static void run_z_probe() {
-    plan_bed_level_matrix.set_to_identity();
+    //plan_bed_level_matrix.set_to_identity();
     feedrate = homing_feedrate[Z_AXIS];
 
     // move down until you find the bed
@@ -1124,14 +1125,6 @@ static void engage_z_probe() {
 #endif
     }
     #endif
-	
-	#ifdef Z_PROBE_DEPLOY_SEQUENCE
-	for (int i=0; z_probe_deploy_sequence[i][0] != -1; i++) {
-		do_blocking_move_to(z_probe_deploy_sequence[i][0],
-					        z_probe_deploy_sequence[i][1],
-							z_probe_deploy_sequence[i][2]);	
-	}
-	#endif
 }
 
 static void retract_z_probe() {
@@ -1148,14 +1141,6 @@ static void retract_z_probe() {
 #endif
     }
     #endif
-	
-	#ifdef Z_PROBE_DEPLOY_SEQUENCE
-	for (int i=0; z_probe_retract_sequence[i][0] != -1; i++) {
-		do_blocking_move_to(z_probe_retract_sequence[i][0],
-						    z_probe_retract_sequence[i][1],
-							z_probe_retract_sequence[i][2]);
-	}
-	#endif
 }
 
 /// Probe bed height at position (x,y), returns the measured z value
@@ -1164,12 +1149,12 @@ static float probe_pt(float x, float y, float z_before) {
   do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], z_before);
   do_blocking_move_to(x - X_PROBE_OFFSET_FROM_EXTRUDER, y - Y_PROBE_OFFSET_FROM_EXTRUDER, current_position[Z_AXIS]);
 
-#if not defined(Z_PROBE_SLED) && not defined(Z_PROBE_DEPLOY_SEQUENCE)
+#if not defined(Z_PROBE_SLED)
   engage_z_probe();   // Engage Z Servo endstop if available
 #endif // Z_PROBE_SLED
   run_z_probe();
   float measured_z = current_position[Z_AXIS];
-#if not defined(Z_PROBE_SLED) && not defined(Z_PROBE_DEPLOY_SEQUENCE)
+#if not defined(Z_PROBE_SLED)
   retract_z_probe();
 #endif // Z_PROBE_SLED
 
@@ -1263,7 +1248,9 @@ static void homeaxis(int axis) {
     if (axis==Z_AXIS) retract_z_probe();
   #endif
 #endif
-
+#ifdef Z_PROBE_DESTROYER2012
+	if (axis==Z_AXIS) z_probe_destroyer2012_offset = 0;
+#endif
   }
 }
 #define HOMEAXIS(LETTER) homeaxis(LETTER##_AXIS)
@@ -1360,6 +1347,32 @@ static void dock_sled(bool dock, int offset=0) {
    // turn on magnet
    digitalWrite(SERVO0_PIN, HIGH);
  }
+}
+#endif
+
+#ifdef Z_PROBE_DESTROYER2012
+static void dock_destroyer2012(bool dock) 
+{ 
+	if (!((axis_known_position[X_AXIS]) && (axis_known_position[Y_AXIS]))) {
+		LCD_MESSAGEPGM(MSG_POSITION_UNKNOWN);
+		SERIAL_ECHO_START;
+		SERIAL_ECHOLNPGM(MSG_POSITION_UNKNOWN);
+		return;
+	}
+
+	if (dock) {
+		for (int i=0; z_probe_retract_sequence[i][0] != -1; i++) {
+			do_blocking_move_to(z_probe_retract_sequence[i][0],
+								z_probe_retract_sequence[i][1],
+								z_probe_retract_sequence[i][2] + z_probe_destroyer2012_offset);
+		}
+	} else {
+		for (int i=0; z_probe_deploy_sequence[i][0] != -1; i++) {
+			do_blocking_move_to(z_probe_deploy_sequence[i][0],
+								z_probe_deploy_sequence[i][1],
+								z_probe_deploy_sequence[i][2] + z_probe_destroyer2012_offset);
+		}
+	}
 }
 #endif
 
@@ -1694,8 +1707,8 @@ void process_commands()
 #ifdef Z_PROBE_SLED
             dock_sled(false);
 #endif // Z_PROBE_SLED
-#ifdef Z_PROBE_DEPLOY_SEQUENCE
-			engage_z_probe();
+#ifdef Z_PROBE_DESTROYER2012
+			dock_destroyer2012(false);
 #endif
             st_synchronize();
             // make sure the bed_level_rotation_matrix is identity or the planner will get it incorectly
@@ -1781,13 +1794,6 @@ void process_commands()
             }
             clean_up_after_endstop_move();
 
-#ifdef Z_PROBE_DEPLOY_SEQUENCE
-			x_tmp = current_position[X_AXIS];
-			y_tmp = current_position[Y_AXIS];
-			z_tmp = current_position[Z_AXIS];
-			retract_z_probe();
-			do_blocking_move_to(x_tmp, y_tmp, z_tmp);
-#endif
             // solve lsq problem
             double *plane_equation_coefficients = qr_solve(AUTO_BED_LEVELING_GRID_POINTS*AUTO_BED_LEVELING_GRID_POINTS, 3, eqnAMatrix, eqnBVector);
 
@@ -1798,6 +1804,11 @@ void process_commands()
             SERIAL_PROTOCOLPGM(" d: ");
             SERIAL_PROTOCOLLN(plane_equation_coefficients[2]);
 
+#ifdef Z_PROBE_DESTROYER2012
+			// This offset should be applied to get back to machine coordinates
+			// Assume bed is close to be even, so not need to take car of rotation
+			z_probe_destroyer2012_offset += zprobe_zoffset - current_position[Z_AXIS];
+#endif
             set_bed_level_equation_lsq(plane_equation_coefficients);
 
             free(plane_equation_coefficients);
@@ -1814,15 +1825,13 @@ void process_commands()
             // probe 3
             float z_at_pt_3 = probe_pt(ABL_PROBE_PT_3_X, ABL_PROBE_PT_3_Y, current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
 
-#ifdef Z_PROBE_DEPLOY_SEQUENCE
-			x_tmp = current_position[X_AXIS];
-			y_tmp = current_position[Y_AXIS];
-			z_tmp = current_position[Z_AXIS];
-			retract_z_probe();
-			do_blocking_move_to(x_tmp, y_tmp, z_tmp);
-#endif
             clean_up_after_endstop_move();
 
+#ifdef Z_PROBE_DESTROYER2012
+			// This offset should be applied to get back to machine coordinates
+			// Assume bed is close to be even, so not need to take car of rotation
+			z_probe_destroyer2012_offset += zprobe_zoffset - current_position[Z_AXIS];
+#endif
             set_bed_level_equation_3pts(z_at_pt_1, z_at_pt_2, z_at_pt_3);
 
 
@@ -1843,6 +1852,9 @@ void process_commands()
 #ifdef Z_PROBE_SLED
             dock_sled(true, -SLED_DOCKING_OFFSET); // correct for over travel.
 #endif // Z_PROBE_SLED
+#ifdef Z_PROBE_DESTROYER2012
+			dock_destroyer2012(true);
+#endif
         }
         break;
 #ifndef Z_PROBE_SLED
@@ -1877,6 +1889,14 @@ void process_commands()
         dock_sled(false);
         break;
 #endif // Z_PROBE_SLED
+#ifdef Z_PROBE_DESTROYER2012
+    case 31: // dock the probe
+    dock_destroyer2012(true);
+    break;
+    case 32: // undock the probe
+    dock_destroyer2012(false);
+    break;
+#endif
 #endif // ENABLE_AUTO_BED_LEVELING
     case 90: // G90
       relative_mode = false;
@@ -3392,7 +3412,7 @@ Sigma_Exit:
       st_synchronize();
     }
     break;
-#if defined(ENABLE_AUTO_BED_LEVELING) && (defined(SERVO_ENDSTOPS) || defined(Z_PROBE_DEPLOY_SEQUENCE)) && not defined(Z_PROBE_SLED)
+#if defined(ENABLE_AUTO_BED_LEVELING) && defined(SERVO_ENDSTOPS) && not defined(Z_PROBE_SLED)
     case 401:
     {
         engage_z_probe();    // Engage Z Servo endstop if available

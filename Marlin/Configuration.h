@@ -409,7 +409,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
     // set the rectangle in which to probe
     #define LEFT_PROBE_BED_POSITION 20
     #define RIGHT_PROBE_BED_POSITION 180
-    #define BACK_PROBE_BED_POSITION 200
+    #define BACK_PROBE_BED_POSITION 190
     #define FRONT_PROBE_BED_POSITION 60
 
      // set the number of grid points per dimension
@@ -422,9 +422,9 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
     // is used to esimate the plane of the print bed
 
       #define ABL_PROBE_PT_1_X 20
-      #define ABL_PROBE_PT_1_Y 200
+      #define ABL_PROBE_PT_1_Y 190
       #define ABL_PROBE_PT_2_X 180
-      #define ABL_PROBE_PT_2_Y 200
+      #define ABL_PROBE_PT_2_Y 190
       #define ABL_PROBE_PT_3_X 20
       #define ABL_PROBE_PT_3_Y 60
 
@@ -454,8 +454,9 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 //  #define PROBE_SERVO_DEACTIVATION_DELAY 300
 
   //Define positions for the deployment of a retracting probe such as http://www.thingiverse.com/thing:89146
-  #define Z_PROBE_DEPLOY_SEQUENCE  { {107, 180, 29}, {107, 193, 29}, {91, 193, 15}, {91, 180, 15}, {-1, -1, -1} }
-  #define Z_PROBE_RETRACT_SEQUENCE { { 57, 180, 58}, { 57, 193, 58}, {52, 193, 29}, {52, 180, 29}, { -1, -1, -1} }
+  #define Z_PROBE_DESTROYER2012
+  #define Z_PROBE_DESTROYER2012_DEPLOY_SEQUENCE  { {107, 180, 29}, {107, 193, 29}, {91, 193, 15}, {91, 180, 15}, {-1, -1, -1} }
+  #define Z_PROBE_DESTROYER2012_RETRACT_SEQUENCE { { 57, 180, 58}, { 57, 193, 58}, {52, 193, 29}, {52, 180, 29}, { -1, -1, -1} }
 
 
 //If you have enabled the Bed Auto Leveling and are using the same Z Probe for Z Homing,
