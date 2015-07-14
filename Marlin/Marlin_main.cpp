@@ -1756,11 +1756,12 @@ void process_commands()
             double *plane_equation_coefficients = qr_solve(AUTO_BED_LEVELING_GRID_POINTS*AUTO_BED_LEVELING_GRID_POINTS, 3, eqnAMatrix, eqnBVector);
 
             SERIAL_PROTOCOLPGM("Eqn coefficients: a: ");
-            SERIAL_PROTOCOL(plane_equation_coefficients[0]);
+            SERIAL_PROTOCOL_F(plane_equation_coefficients[0], 4);
             SERIAL_PROTOCOLPGM(" b: ");
-            SERIAL_PROTOCOL(plane_equation_coefficients[1]);
+            SERIAL_PROTOCOL_F(plane_equation_coefficients[1], 4);
             SERIAL_PROTOCOLPGM(" d: ");
-            SERIAL_PROTOCOLLN(plane_equation_coefficients[2]);
+            SERIAL_PROTOCOL_F(plane_equation_coefficients[2], 4);
+			MYSERIAL.write('\n');
 
 
             set_bed_level_equation_lsq(plane_equation_coefficients);
