@@ -1386,7 +1386,8 @@
 
 #define SDPOWER            -1
 #define SDSS               53
-#define LED_PIN            13
+#define LED_PIN            -1
+#define PROBE_PIN			13	// Proximity sensor for bed auto leveling
 #define FAN_PIN            7
 #define PS_ON_PIN          12
 #define KILL_PIN           -1

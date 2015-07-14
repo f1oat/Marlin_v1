@@ -864,6 +864,13 @@ void st_init()
     #endif
   #endif
 
+  #if defined(PROBE_PIN) && PROBE_PIN > -1
+	SET_INPUT(PROBE_PIN);
+	#ifdef ENDSTOPPULLUP_PROBE
+		WRITE(PROBE_PIN,HIGH);
+	#endif
+  #endif
+  
   #if defined(X_MAX_PIN) && X_MAX_PIN > -1
     SET_INPUT(X_MAX_PIN);
     #ifdef ENDSTOPPULLUP_XMAX
