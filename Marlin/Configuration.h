@@ -102,7 +102,7 @@
 #define POWER_SUPPLY 2
 
 // Define this to have the electronics keep the powersupply off on startup. If you don't know what this is leave it.
-#define PS_DEFAULT_OFF
+//#define PS_DEFAULT_OFF
 
 //===========================================================================
 //=============================Thermal Settings  ============================
