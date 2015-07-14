@@ -1342,6 +1342,28 @@ static void dock_sled(bool dock, int offset=0) {
 }
 #endif
 
+void process_G0G1()
+{
+      if(Stopped == false) {
+	      get_coordinates(); // For X Y Z E F
+	      #ifdef FWRETRACT
+	      if(autoretract_enabled)
+	      if( !(code_seen('X') || code_seen('Y') || code_seen('Z')) && code_seen('E')) {
+		      float echange=destination[E_AXIS]-current_position[E_AXIS];
+		      if((echange<-MIN_RETRACT && !retracted) || (echange>MIN_RETRACT && retracted)) { //move appears to be an attempt to retract or recover
+			      current_position[E_AXIS] = destination[E_AXIS]; //hide the slicer-generated retract/recover from calculations
+			      plan_set_e_position(current_position[E_AXIS]); //AND from the planner
+			      retract(!retracted);
+			      return;
+		      }
+	      }
+	      #endif //FWRETRACT
+	      prepare_move();
+	      //ClearToSend();
+	      return;
+      }	
+}
+
 void process_commands()
 {
   unsigned long codenum; //throw away variable
@@ -1354,27 +1376,20 @@ void process_commands()
     switch_power_on();
     switch((int)code_value())
     {
-    case 0: // G0 -> G1
+    case 0: // G0
+		{
+			float save_feedrate = feedrate;
+			float saved_feedmultiply = feedmultiply; 
+			feedrate = 60000;
+			feedmultiply = 100;
+			process_G0G1();
+			feedrate = saved_feedrate;
+			feedmultiply = saved_feedmultiply;
+		}
+		break;
     case 1: // G1
-      if(Stopped == false) {
-        get_coordinates(); // For X Y Z E F
-          #ifdef FWRETRACT
-            if(autoretract_enabled)
-            if( !(code_seen('X') || code_seen('Y') || code_seen('Z')) && code_seen('E')) {
-              float echange=destination[E_AXIS]-current_position[E_AXIS];
-              if((echange<-MIN_RETRACT && !retracted) || (echange>MIN_RETRACT && retracted)) { //move appears to be an attempt to retract or recover
-                  current_position[E_AXIS] = destination[E_AXIS]; //hide the slicer-generated retract/recover from calculations
-                  plan_set_e_position(current_position[E_AXIS]); //AND from the planner
-                  retract(!retracted);
-                  return;
-              }
-            }
-          #endif //FWRETRACT
-        prepare_move();
-        //ClearToSend();
-        return;
-      }
-      break;
+		process_G0G1();
+		break;
 #ifndef SCARA //disable arc support
     case 2: // G2  - CW ARC
       if(Stopped == false) {
@@ -1472,8 +1487,8 @@ void process_commands()
           plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS]);		  
 		  
 #else // NOT DELTA
-
-      home_all_axis = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS])));
+     
+	  home_all_axis = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS])));
 	  
       #if Z_HOME_DIR > 0                      // If homing away from BED do Z first
       if((home_all_axis) || (code_seen(axis_codes[Z_AXIS]))) {
@@ -1657,6 +1672,12 @@ void process_commands()
 #ifdef ENABLE_AUTO_BED_LEVELING
     case 29: // G29 Detailed Z-Probe, probes the bed at 3 or more points.
         {
+ 			float save_feedrate = feedrate;
+ 			float saved_feedmultiply = feedmultiply;
+			float saved_X = current_position[X_AXIS];
+			float saved_Y = current_position[Y_AXIS];
+ 			feedmultiply = 100;
+			 
             #if Z_MIN_PIN == -1
             #error "You must have a Z_MIN endstop in order to enable Auto Bed Leveling feature!!! Z_MIN_PIN must point to a valid hardware pin."
             #endif
@@ -1802,6 +1823,12 @@ void process_commands()
 #ifdef Z_PROBE_SLED
             dock_sled(true, -SLED_DOCKING_OFFSET); // correct for over travel.
 #endif // Z_PROBE_SLED
+			
+			// Restore position
+			do_blocking_move_to(saved_X, saved_Y, current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
+			
+			feedrate = saved_feedrate;
+			feedmultiply = saved_feedmultiply;
         }
         break;
 #ifndef Z_PROBE_SLED
