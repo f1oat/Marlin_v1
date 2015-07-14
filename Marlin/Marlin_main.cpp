@@ -342,7 +342,7 @@ const int sensitive_pins[] = SENSITIVE_PINS; // Sensitive pin list for M42
 
 //Inactivity shutdown variables
 static unsigned long previous_millis_cmd = 0;
-static unsigned long max_inactive_time = 600*1000l;  //10 minutes by default
+static unsigned long max_inactive_time = 3600*1000l;  //1 hour by default
 static unsigned long stepper_inactive_time = DEFAULT_STEPPER_DEACTIVE_TIME*1000l;
 
 unsigned long starttime=0;
