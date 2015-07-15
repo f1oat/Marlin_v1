@@ -1443,7 +1443,8 @@ void process_commands()
       plan_bed_level_matrix.set_to_identity();  //Reset the plane ("erase" all leveling data)
 #endif //ENABLE_AUTO_BED_LEVELING
 
-
+	  lcd_setstatus("Homing ...");
+	  
       saved_feedrate = feedrate;
       saved_feedmultiply = feedmultiply;
       feedmultiply = 100;
@@ -1487,13 +1488,21 @@ void process_commands()
           plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS]);		  
 		  
 #else // NOT DELTA
-     
+ 
+		      
 	  home_all_axis = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS])));
 	  
       #if Z_HOME_DIR > 0                      // If homing away from BED do Z first
       if((home_all_axis) || (code_seen(axis_codes[Z_AXIS]))) {
         HOMEAXIS(Z);
       }
+	  #else
+		// Raise Z to avoid scratching the bed
+		current_position[Z_AXIS] = 0;
+		plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+		feedrate = homing_feedrate[Z_AXIS];
+		plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], Z_RAISE_BEFORE_HOMING, current_position[E_AXIS], feedrate/60, active_extruder);
+		st_synchronize();
       #endif
 
       #ifdef QUICK_HOME
@@ -1589,7 +1598,9 @@ void process_commands()
             #if defined (Z_RAISE_BEFORE_HOMING) && (Z_RAISE_BEFORE_HOMING > 0)
               destination[Z_AXIS] = Z_RAISE_BEFORE_HOMING * home_dir(Z_AXIS) * (-1);    // Set destination away from bed
               feedrate = max_feedrate[Z_AXIS];
-              plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate, active_extruder);
+			  current_position[Z_AXIS] = 0;
+			  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+              plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], destination[Z_AXIS], current_position[E_AXIS], feedrate, active_extruder);
               st_synchronize();
             #endif
             HOMEAXIS(Z);
@@ -1667,6 +1678,7 @@ void process_commands()
       feedmultiply = saved_feedmultiply;
       previous_millis_cmd = millis();
       endstops_hit_on_purpose();
+	  LCD_MESSAGEPGM(WELCOME_MSG);
       break;
 
 #ifdef ENABLE_AUTO_BED_LEVELING
@@ -1690,6 +1702,8 @@ void process_commands()
                 SERIAL_ECHOLNPGM(MSG_POSITION_UNKNOWN);
                 break; // abort G29, since we don't know where we are
             }
+
+			lcd_setstatus("Bed leveling ...");
 
 #ifdef Z_PROBE_SLED
             dock_sled(false);
@@ -1829,6 +1843,8 @@ void process_commands()
 			
 			feedrate = saved_feedrate;
 			feedmultiply = saved_feedmultiply;
+			
+			LCD_MESSAGEPGM(WELCOME_MSG);
         }
         break;
 #ifndef Z_PROBE_SLED
