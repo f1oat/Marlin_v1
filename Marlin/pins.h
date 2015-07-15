@@ -1360,7 +1360,7 @@
 
 #define Z_STEP_PIN 37
 #define Z_DIR_PIN 39
-#define Z_MIN_PIN 13 // 30 : use proximity sensor instead of ZMIN switch
+#define Z_MIN_PIN 30
 #define Z_MAX_PIN 32
 #define Z_ENABLE_PIN 35
 
@@ -1387,7 +1387,7 @@
 #define SDPOWER            -1
 #define SDSS               53
 #define LED_PIN            -1
-#define PROBE_PIN			-1	// Proximity sensor for bed auto leveling
+#define PROBE_PIN		   13	// Proximity sensor for bed auto leveling
 #define FAN_PIN            7
 #define PS_ON_PIN          12
 #define KILL_PIN           -1
@@ -2870,7 +2870,7 @@ DaveX plan for Teensylu/printrboard-type pinouts (ref teensylu & sprinter) for a
 #define Z_MIN_PIN          -1
 #endif
 
-#define SENSITIVE_PINS {0, 1, X_STEP_PIN, X_DIR_PIN, X_ENABLE_PIN, X_MIN_PIN, X_MAX_PIN, Y_STEP_PIN, Y_DIR_PIN, Y_ENABLE_PIN, Y_MIN_PIN, Y_MAX_PIN, Z_STEP_PIN, Z_DIR_PIN, Z_ENABLE_PIN, Z_MIN_PIN, Z_MAX_PIN, PS_ON_PIN, \
+#define SENSITIVE_PINS {0, 1, X_STEP_PIN, X_DIR_PIN, X_ENABLE_PIN, X_MIN_PIN, X_MAX_PIN, Y_STEP_PIN, Y_DIR_PIN, Y_ENABLE_PIN, Y_MIN_PIN, Y_MAX_PIN, Z_STEP_PIN, Z_DIR_PIN, Z_ENABLE_PIN, Z_MIN_PIN, Z_MAX_PIN, PS_ON_PIN, PROBE_PIN,\
                         HEATER_BED_PIN, FAN_PIN,                  \
                         _E0_PINS _E1_PINS _E2_PINS             \
                         analogInputToDigitalPin(TEMP_0_PIN), analogInputToDigitalPin(TEMP_1_PIN), analogInputToDigitalPin(TEMP_2_PIN), analogInputToDigitalPin(TEMP_BED_PIN) }
