@@ -82,6 +82,7 @@ static bool old_y_min_endstop=false;
 static bool old_y_max_endstop=false;
 static bool old_z_min_endstop=false;
 static bool old_z_max_endstop=false;
+static bool old_probe_hit=false;
 
 static bool check_endstops = true;
 
@@ -494,22 +495,28 @@ ISR(TIMER1_COMPA_vect)
       count_direction[Z_AXIS]=-1;
       CHECK_ENDSTOPS
       {
-		bool z_min_endstop = false;
-        
-		#if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
-			z_min_endstop = z_min_endstop || (READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING);
-		#endif
-
-		#if defined(PROBE_PIN) && PROBE_PIN > -1
-			z_min_endstop = z_min_endstop || (READ(PROBE_PIN) != PROBE_PIN_INVERTING);
-		#endif
-		        
-		if (z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {
+        #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
+		{
+          bool z_min_endstop=(READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING);
+          if(z_min_endstop && old_z_min_endstop && (current_block->steps_z > 0)) {
             endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
             endstop_z_hit=true;
             step_events_completed = current_block->step_event_count;
+          }
+          old_z_min_endstop = z_min_endstop;
         }
-        old_z_min_endstop = z_min_endstop;
+		#endif
+
+        #if defined(PROBE_PIN) && PROBE_PIN > -1
+		{
+			bool probe_hit=(READ(PROBE_PIN) != PROBE_PIN_INVERTING);
+			if(probe_hit && old_probe_hit && (current_block->steps_z > 0)) {
+				endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
+				step_events_completed = current_block->step_event_count;
+			}
+			old_probe_hit = probe_hit;
+		}
+        #endif
       }
     }
     else { // +direction
