@@ -1500,18 +1500,11 @@ void process_commands()
 		// Raise Z to avoid scratching the bed     
 
         #if defined (Z_RAISE_BEFORE_HOMING) && (Z_RAISE_BEFORE_HOMING > 0)
-			current_position[X_AXIS] = 0;
-			current_position[Y_AXIS] = 0;
-			current_position[Z_AXIS] = 0;
-			plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-
-            destination[Z_AXIS] = Z_RAISE_BEFORE_HOMING * home_dir(Z_AXIS) * (-1);    // Set destination away from bed
-            feedrate = max_feedrate[Z_AXIS];
-            current_position[Z_AXIS] = 0;
             plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+            destination[Z_AXIS] = current_position[Z_AXIS] + Z_RAISE_BEFORE_HOMING * home_dir(Z_AXIS) * (-1);    // Set destination away from bed
+            feedrate = max_feedrate[Z_AXIS];
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], destination[Z_AXIS], current_position[E_AXIS], feedrate, active_extruder);
-            st_synchronize();
-						
+            st_synchronize();						
 	        current_position[Z_AXIS] = destination[Z_AXIS];	
 		 #endif	
       #endif
