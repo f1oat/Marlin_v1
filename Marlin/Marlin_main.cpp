@@ -1344,24 +1344,21 @@ static void dock_sled(bool dock, int offset=0) {
 
 void process_G0G1()
 {
-      if(Stopped == false) {
-	      get_coordinates(); // For X Y Z E F
-	      #ifdef FWRETRACT
-	      if(autoretract_enabled)
-	      if( !(code_seen('X') || code_seen('Y') || code_seen('Z')) && code_seen('E')) {
-		      float echange=destination[E_AXIS]-current_position[E_AXIS];
-		      if((echange<-MIN_RETRACT && !retracted) || (echange>MIN_RETRACT && retracted)) { //move appears to be an attempt to retract or recover
-			      current_position[E_AXIS] = destination[E_AXIS]; //hide the slicer-generated retract/recover from calculations
-			      plan_set_e_position(current_position[E_AXIS]); //AND from the planner
-			      retract(!retracted);
-			      return;
-		      }
-	      }
-	      #endif //FWRETRACT
-	      prepare_move();
-	      //ClearToSend();
-	      return;
-      }	
+		get_coordinates(); // For X Y Z E F
+		#ifdef FWRETRACT
+		if(autoretract_enabled)
+		if( !(code_seen('X') || code_seen('Y') || code_seen('Z')) && code_seen('E')) {
+			float echange=destination[E_AXIS]-current_position[E_AXIS];
+			if((echange<-MIN_RETRACT && !retracted) || (echange>MIN_RETRACT && retracted)) { //move appears to be an attempt to retract or recover
+				current_position[E_AXIS] = destination[E_AXIS]; //hide the slicer-generated retract/recover from calculations
+				plan_set_e_position(current_position[E_AXIS]); //AND from the planner
+				retract(!retracted);
+				return;
+			}
+		}
+		#endif //FWRETRACT
+		prepare_move();
+		//ClearToSend();
 }
 
 void process_commands()
@@ -1382,13 +1379,19 @@ void process_commands()
 			float saved_feedmultiply = feedmultiply; 
 			feedrate = 60000;
 			feedmultiply = 100;
-			process_G0G1();
-			feedrate = saved_feedrate;
-			feedmultiply = saved_feedmultiply;
+			if (Stopped == false) {
+				process_G0G1();
+				feedrate = saved_feedrate;
+				feedmultiply = saved_feedmultiply;
+				return;
+			}
 		}
 		break;
     case 1: // G1
-		process_G0G1();
+		if (Stopped == false) {
+			process_G0G1();
+			return;
+		}
 		break;
 #ifndef SCARA //disable arc support
     case 2: // G2  - CW ARC
