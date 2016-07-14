@@ -5,3 +5,7 @@ applet/
 *.rej
 *.bak
 *.d
+/Marlin/Debug
+/Marlin/Release
+/Marlin/__vm
+/Marlin/.vs/Marlin/v14/.suo

@@ -401,7 +401,7 @@ const bool PROBE_PIN_INVERTING = true; // set to true to invert the logic of the
 //    Probe 3 arbitrary points on the bed (that aren't colinear)
 //    You must specify the X & Y coordinates of all 3 points
 
-  //#define AUTO_BED_LEVELING_GRID
+  #define AUTO_BED_LEVELING_GRID
   // with AUTO_BED_LEVELING_GRID, the bed is sampled in a
   // AUTO_BED_LEVELING_GRID_POINTSxAUTO_BED_LEVELING_GRID_POINTS grid
   // and least squares solution is calculated
@@ -409,14 +409,14 @@ const bool PROBE_PIN_INVERTING = true; // set to true to invert the logic of the
   #ifdef AUTO_BED_LEVELING_GRID
 
     // set the rectangle in which to probe
-    #define LEFT_PROBE_BED_POSITION 20
+    #define LEFT_PROBE_BED_POSITION 0
     #define RIGHT_PROBE_BED_POSITION 170
     #define BACK_PROBE_BED_POSITION 180
     #define FRONT_PROBE_BED_POSITION 0
 
      // set the number of grid points per dimension
      // I wouldn't see a reason to go above 3 (=9 probing points on the bed)
-    #define AUTO_BED_LEVELING_GRID_POINTS 2
+    #define AUTO_BED_LEVELING_GRID_POINTS 3
 
 
   #else  // not AUTO_BED_LEVELING_GRID
