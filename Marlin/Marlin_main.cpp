@@ -1042,9 +1042,11 @@ static void set_bed_level_equation_3pts(float z_at_pt_1, float z_at_pt_2, float 
 static void run_z_probe() {
     plan_bed_level_matrix.set_to_identity();
     feedrate = homing_feedrate[Z_AXIS];
+	float zPosition;
 
+#ifdef TWO_STEPS_PROBING
     // move down until you find the bed
-    float zPosition = -10;
+    zPosition = -10;
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
 
@@ -1056,9 +1058,10 @@ static void run_z_probe() {
     zPosition += home_retract_mm(Z_AXIS);
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
+#endif
 
     // move back down slowly to find bed
-    feedrate = homing_feedrate[Z_AXIS]/4;
+    feedrate = homing_feedrate[Z_AXIS]/2;
     zPosition -= home_retract_mm(Z_AXIS) * 2;
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
@@ -1673,10 +1676,20 @@ void process_commands()
         enable_endstops(false);
       #endif
 
-      feedrate = saved_feedrate;
+	  get_coordinates();
+	  if (home_all_axis) {
+		  destination[X_AXIS] = destination[Y_AXIS] = destination[Z_AXIS] = 0;
+	  }
+	  feedrate = max_feedrate[Z_AXIS] * 60.0;
+	  prepare_move();
+	  st_synchronize();
+	  //plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+
+	  feedrate = saved_feedrate;
       feedmultiply = saved_feedmultiply;
       previous_millis_cmd = millis();
       endstops_hit_on_purpose();
+
 	  LCD_MESSAGEPGM(WELCOME_MSG);
       break;
 
