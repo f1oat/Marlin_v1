@@ -51,7 +51,7 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 #ifdef EEPROM_SETTINGS
 void Config_StoreSettings() 
 {
-  char ver[4]= "000";
+  char ver[4]= "001";
   int i=EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i,ver); // invalidate data first 
   EEPROM_WRITE_VAR(i,axis_steps_per_unit);
@@ -101,6 +101,18 @@ void Config_StoreSettings()
   #ifdef SCARA
   EEPROM_WRITE_VAR(i,axis_scaling);        // Add scaling for SCARA
   #endif
+
+  // Temperature offsets
+  EEPROM_WRITE_VAR(i, temperature_offset[0]);
+#if TEMP_SENSOR_1 != 0
+  EEPROM_WRITE_VAR(i, temperature_offset[1]);
+#endif
+#if TEMP_SENSOR_2 != 0
+  EEPROM_WRITE_VAR(i, temperature_offset[2]);
+#endif
+
+  // End of config
+
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i,ver2); // validate data
@@ -262,6 +274,16 @@ void Config_RetrieveSettings()
 		EEPROM_READ_VAR(i,axis_scaling);
 		#endif
 
+		// Temperature offsets
+		EEPROM_READ_VAR(i, temperature_offset[0]);
+#if TEMP_SENSOR_1 != 0
+		EEPROM_READ_VAR(i, temperature_offset[1]);
+#endif
+#if TEMP_SENSOR_2 != 0
+		EEPROM_READ_VAR(i, temperature_offset[2]);
+#endif
+		// End of config
+
 		// Call updatePID (similar to when we have processed M301)
 		updatePID();
         SERIAL_ECHO_START;
@@ -337,6 +359,15 @@ void Config_ResetDefault()
     Kc = DEFAULT_Kc;
 #endif//PID_ADD_EXTRUSION_RATE
 #endif//PIDTEMP
+
+	// Temperature offsets
+	temperature_offset[0] = 0;
+#if TEMP_SENSOR_1 != 0
+	temperature_offset[1] = 0;
+#endif
+#if TEMP_SENSOR_2 != 0
+	temperature_offset[2] = 0;
+#endif
 
 SERIAL_ECHO_START;
 SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
