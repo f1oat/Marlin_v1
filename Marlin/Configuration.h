@@ -102,7 +102,7 @@
 #define POWER_SUPPLY 2
 
 // Define this to have the electronics keep the powersupply off on startup. If you don't know what this is leave it.
-//#define PS_DEFAULT_OFF
+#define PS_DEFAULT_OFF
 
 //===========================================================================
 //=============================Thermal Settings  ============================
@@ -376,7 +376,7 @@ const bool PROBE_PIN_INVERTING = true; // set to true to invert the logic of the
 #define X_MIN_POS 0
 #define Y_MAX_POS 205
 #define Y_MIN_POS 0
-#define Z_MAX_POS 200
+#define Z_MAX_POS 198
 #define Z_MIN_POS 0
 
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
