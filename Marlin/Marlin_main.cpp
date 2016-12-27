@@ -1701,7 +1701,7 @@ void process_commands()
 			float saved_X = current_position[X_AXIS];
 			float saved_Y = current_position[Y_AXIS];
  			feedmultiply = 100;
-			 
+
             #if Z_MIN_PIN == -1
             #error "You must have a Z_MIN endstop in order to enable Auto Bed Leveling feature!!! Z_MIN_PIN must point to a valid hardware pin."
             #endif
@@ -1849,10 +1849,10 @@ void process_commands()
 #ifdef Z_PROBE_SLED
             dock_sled(true, -SLED_DOCKING_OFFSET); // correct for over travel.
 #endif // Z_PROBE_SLED
-			
+
 			// Restore position
 			do_blocking_move_to(saved_X, saved_Y, current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
-			
+
 			feedrate = saved_feedrate;
 			feedmultiply = saved_feedmultiply;
 			

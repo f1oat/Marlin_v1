@@ -216,6 +216,9 @@ void endstops_hit_on_purpose()
 void enable_endstops(bool check)
 {
   check_endstops = check;
+  endstop_x_hit = false;
+  endstop_y_hit = false;
+  endstop_z_hit = false;
 }
 
 //         __________________________
