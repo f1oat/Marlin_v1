@@ -1061,7 +1061,7 @@ static void run_z_probe() {
 #endif
 
     // move back down slowly to find bed
-    feedrate = homing_feedrate[Z_AXIS]/2;
+    feedrate = homing_feedrate[Z_AXIS]/10;
     zPosition -= home_retract_mm(Z_AXIS) * 2;
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();

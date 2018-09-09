@@ -401,7 +401,7 @@ const bool PROBE_PIN_INVERTING = true; // set to true to invert the logic of the
 //    Probe 3 arbitrary points on the bed (that aren't colinear)
 //    You must specify the X & Y coordinates of all 3 points
 
-  #define AUTO_BED_LEVELING_GRID
+  //#define AUTO_BED_LEVELING_GRID
   // with AUTO_BED_LEVELING_GRID, the bed is sampled in a
   // AUTO_BED_LEVELING_GRID_POINTSxAUTO_BED_LEVELING_GRID_POINTS grid
   // and least squares solution is calculated
@@ -437,7 +437,7 @@ const bool PROBE_PIN_INVERTING = true; // set to true to invert the logic of the
   #define X_PROBE_OFFSET_FROM_EXTRUDER 0
   #define Y_PROBE_OFFSET_FROM_EXTRUDER 0
   #define Z_PROBE_OFFSET_FROM_EXTRUDER -2
-
+  #define TWO_STEPS_PROBING 1
   #define Z_RAISE_BEFORE_HOMING 4       // (in mm) Raise Z before homing (G28) for Probe Clearance.
                                         // Be sure you have this distance over your Z_MAX_POS in case
 
