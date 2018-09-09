@@ -2478,7 +2478,8 @@ Sigma_Exit:
       break;
     case 109:
     {// M109 - Wait for extruder heater to reach target.
-      if(setTargetedHotend(109)){
+	  if (code_value() != 0) switch_power_on(); 
+	  if(setTargetedHotend(109)){
         break;
       }
       LCD_MESSAGEPGM(MSG_HEATING);
@@ -2593,7 +2594,8 @@ Sigma_Exit:
     case 190: // M190 - Wait for bed heater to reach target.
     #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
         LCD_MESSAGEPGM(MSG_BED_HEATING);
-        if (code_seen('S')) {
+		if (code_value() != 0) switch_power_on();
+		if (code_seen('S')) {
           setTargetBed(code_value());
           CooldownNoWait = true;
         } else if (code_seen('R')) {
